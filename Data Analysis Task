@@ -1,0 +1,95 @@
+Data Analysis Task
+
+1. Output all information about customers who are located in the USA. 
+
+SELECT *
+FROM Customers
+WHERE Country = 'USA';
+
+2. Find the product whose name has the string "Choco". Output the Product id and 
+Product name. 
+
+SELECT Product_id, Product_name
+FROM Products
+WHERE Product_name LIKE '%Choco%';
+
+3. Output all the information about the supplier that supplies a product name “Ipoh 
+Coffee”. 
+
+SELECT *
+FROM Supplier, Products, Supplier_of_product
+WHERE Supplier.Supplier_id = Supplier_of_product.Supplier_id AND 
+Products.Product_id = Supplier_of_product.Product_id AND Product_name = 'Ipoh 
+Coffee';
+
+4. Count how many orders that have been shipped by a shipper company name 
+Lightning PTY Ltd. Output the shipper id, company name, and total order shipped. 
+
+SELECT S.Shipper_id, S.Company_name, COUNT(order_id) AS Total_OrderShipped
+FROM Orders AS O
+INNER JOIN Shippers AS S ON O.shipper_id = S.Shipper_id
+WHERE S.Company_name = 'Lightning PTY Ltd';
+
+5. Look for a customer that have order more than one time and live in Brazil. OUTPUT 
+the Customer id, Company_name, and total number of orders. 
+
+SELECT C.Customer_id, C.Company_name, COUNT(O.order_id) AS Total_order
+FROM Orders AS O
+INNER JOIN Customers AS C ON O.Customer_id = C.Customer_id
+WHERE C.Country = 'Brazil'
+GROUP BY C.Customer_id, C.Company_name
+HAVING COUNT(O.Order_id) > 1;
+
+6. Output product id and product name that is supplied by company name Bigfoot 
+Breweries.
+
+SELECT P.Product_id, P.Product_name
+FROM Products AS P
+INNER JOIN Supplier_of_product AS SOP ON P.Product_id = SOP.Product_id
+WHERE SOP.Supplier_id = (SELECT Supplier_id
+FROM Supplier AS S
+WHERE S.Company_name = 'Bigfoot Breweries');
+
+7. Output all the information about a product that have never been ordered and still 
+have more than 50 units in stocks.
+
+SELECT * 
+FROM Products AS P
+WHERE In_stock > 50 AND NOT EXISTS
+(SELECT *
+FROM Order_details AS OD
+WHERE P.Product_id = OD.Product_id);
+
+8. Look for how many orders served by an employee name 'Karen Tanjung'. 
+
+SELECT E.Employee_id, E.Last_name, E.First_name, COUNT(O.Employee_id) AS 
+Total_order_served
+FROM Employees AS E
+INNER JOIN Orders AS O ON E.Employee_id = O.Employee_Id
+WHERE E.Last_name = 'Karen' AND E.First_name = 'Tanjung'
+GROUP BY E.Employee_id, E.Last_name, E.First_name;
+
+9. Find the customer who has the most expensive order in the database 
+
+SELECT C.Customer_id, C.Company_name
+FROM Customers AS C
+INNER JOIN Orders AS O ON C.Customer_id = O.Customer_id
+WHERE Order_id IN (SELECT order_id
+FROM (SELECT Order_id, MAX(summation.Total_order)
+FROM (SELECT Order_id, SUM(Total_price_of_product) AS Total_order
+FROM Order_details
+GROUP BY Order_id) AS summation));
+
+10. Look for an order that is serve by employee with first name ‘Nancy’, shipped by 
+company name ‘speedy express’, and have product name like 'Ipoh'. Output the 
+Order_id, customer_id, company_name, contact_name and phone number.
+
+SELECT O.Order_id, C.Customer_id, C.Company_name, C.Contact_name, 
+C.Country, C.Phone
+FROM Orders AS O, Order_details AS OD, Employees AS E, Shippers AS S, 
+Products AS P, Customers AS C
+WHERE O.Order_id = OD.Order_id AND OD.Product_id = P.Product_id AND 
+O.Customer_id = C.Customer_id AND O.Shipper_id = S.Shipper_id AND 
+E.Employee_id = O.Employee_id
+AND E.First_name = 'Nancy' AND S.Company_name = 'Speedy Express' AND 
+P.Product_name LIKE '%Ipoh%';
